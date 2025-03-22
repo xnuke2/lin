@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <unistd.h> // Для getpid()
 
 #define MSG_SIZE 128
 
@@ -16,6 +17,7 @@ int main() {
     key_t key;
     int msgid;
     struct message msg;
+    pid_t pid = getpid(); // Получаем PID текущего процесса
 
     // Генерация ключа для очереди сообщений
     key = ftok("msg_queue", 65);
@@ -49,14 +51,20 @@ int main() {
 
     printf("Server says: %s\n", msg.msg_text);
 
+    // Создание имени файла с использованием PID
+    char filename[256];
+    snprintf(filename, sizeof(filename), "client_log_%d.txt", pid);
+
     // Запись сообщения в файл
-    FILE *file = fopen("client_log.txt", "a");
+    FILE *file = fopen(filename, "a");
     if (file == NULL) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
     fprintf(file, "Received: %s\n", msg.msg_text);
     fclose(file);
+
+    printf("Message written to %s\n", filename);
 
     return 0;
 }
