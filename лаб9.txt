@@ -1,73 +1,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
-#define PORT 12345
-#define BUFFER_SIZE 1024
+#define MSG_SIZE 128
+
+// Структура для сообщения
+struct message {
+    long msg_type;
+    char msg_text[MSG_SIZE];
+};
 
 int main() {
-    int server_fd, client_fd;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
-    char buffer[BUFFER_SIZE];
+    key_t key;
+    int msgid;
+    struct message msg;
 
-    // Создание сокета
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Ошибка создания сокета");
+    // Генерация ключа для очереди сообщений
+    key = ftok("msg_queue", 65);
+    if (key == -1) {
+        perror("ftok");
         exit(EXIT_FAILURE);
     }
 
-    // Настройка адреса сервера
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
-
-    // Привязка сокета к адресу
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Ошибка привязки");
-        close(server_fd);
+    // Создание очереди сообщений
+    msgid = msgget(key, 0666 | IPC_CREAT);
+    if (msgid == -1) {
+        perror("msgget");
         exit(EXIT_FAILURE);
     }
 
-    // Ожидание подключения клиента
-    if (listen(server_fd, 1) < 0) {
-        perror("Ошибка прослушивания");
-        close(server_fd);
+    printf("Server is waiting for messages...\n");
+
+    // Получение сообщения от клиента
+    if (msgrcv(msgid, &msg, sizeof(msg.msg_text), 1, 0) == -1) {
+        perror("msgrcv");
         exit(EXIT_FAILURE);
     }
 
-    printf("Сервер запущен. Ожидание подключения клиента...\n");
+    printf("Client says: %s\n", msg.msg_text);
 
-    // Принятие подключения
-    if ((client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len)) < 0) {
-        perror("Ошибка принятия подключения");
-        close(server_fd);
+    // Запись сообщения в файл
+    FILE *file = fopen("server_log.txt", "a");
+    if (file == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, "Received: %s\n", msg.msg_text);
+    fclose(file);
+
+    // Отправка ответа клиенту
+    msg.msg_type = 2;
+    strcpy(msg.msg_text, "Hello from server");
+    if (msgsnd(msgid, &msg, sizeof(msg.msg_text), 0) == -1) {
+        perror("msgsnd");
         exit(EXIT_FAILURE);
     }
 
-    printf("Клиент подключен.\n");
+    printf("Response sent to client\n");
 
-    // Обмен сообщениями
-    while (1) {
-        memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0) {
-            printf("Клиент отключился.\n");
-            break;
-        }
-
-        printf("Получено сообщение от клиента: %s\n", buffer);
-
-        // Отправка ответа клиенту
-        const char *response = "Сообщение получено";
-        send(client_fd, response, strlen(response), 0);
+    // Удаление очереди сообщений
+    if (msgctl(msgid, IPC_RMID, NULL) == -1) {
+        perror("msgctl");
+        exit(EXIT_FAILURE);
     }
-
-    close(client_fd);
-    close(server_fd);
-    printf("Сервер завершил работу.\n");
 
     return 0;
 }

@@ -1,63 +1,62 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
-#define PORT 12345
-#define BUFFER_SIZE 1024
+#define MSG_SIZE 128
+
+// Структура для сообщения
+struct message {
+    long msg_type;
+    char msg_text[MSG_SIZE];
+};
 
 int main() {
-    int client_fd;
-    struct sockaddr_in server_addr;
-    char buffer[BUFFER_SIZE];
+    key_t key;
+    int msgid;
+    struct message msg;
 
-    // Создание сокета
-    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Ошибка создания сокета");
+    // Генерация ключа для очереди сообщений
+    key = ftok("msg_queue", 65);
+    if (key == -1) {
+        perror("ftok");
         exit(EXIT_FAILURE);
     }
 
-    // Настройка адреса сервера
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    if (inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr) <= 0) {
-        perror("Ошибка настройки адреса");
-        close(client_fd);
+    // Получение идентификатора очереди сообщений
+    msgid = msgget(key, 0666);
+    if (msgid == -1) {
+        perror("msgget");
         exit(EXIT_FAILURE);
     }
 
-    // Подключение к серверу
-    if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Ошибка подключения");
-        close(client_fd);
+    // Отправка сообщения серверу
+    msg.msg_type = 1;
+    strcpy(msg.msg_text, "Hello from client");
+    if (msgsnd(msgid, &msg, sizeof(msg.msg_text), 0) == -1) {
+        perror("msgsnd");
         exit(EXIT_FAILURE);
     }
 
-    printf("Подключение к серверу установлено.\n");
+    printf("Message sent to server\n");
 
-    // Обмен сообщениями
-    while (1) {
-        printf("Введите сообщение: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = 0; // Удаление символа новой строки
-
-        // Отправка сообщения серверу
-        send(client_fd, buffer, strlen(buffer), 0);
-
-        // Получение ответа от сервера
-        memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0) {
-            printf("Сервер отключился.\n");
-            break;
-        }
-
-        printf("Ответ сервера: %s\n", buffer);
+    // Получение ответа от сервера
+    if (msgrcv(msgid, &msg, sizeof(msg.msg_text), 2, 0) == -1) {
+        perror("msgrcv");
+        exit(EXIT_FAILURE);
     }
 
-    close(client_fd);
-    printf("Клиент завершил работу.\n");
+    printf("Server says: %s\n", msg.msg_text);
+
+    // Запись сообщения в файл
+    FILE *file = fopen("client_log.txt", "a");
+    if (file == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, "Received: %s\n", msg.msg_text);
+    fclose(file);
 
     return 0;
 }
