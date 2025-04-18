@@ -25,6 +25,7 @@ void* thread_work(void* arg) {
 int main() {
     srand(time(NULL));
     int thread_counter = 0;
+    time_t last_batch_time = time(NULL);
 
     if (pipe(pipe_fd) == -1) {
         perror("Ошибка создания pipe");
@@ -34,26 +35,28 @@ int main() {
     printf("Родительский процесс (PID: %d)\n", getpid());
 
     while (1) {
-        for (int i = 0; i < THREADS_PER_BATCH; i++) {
-            int* thread_id = malloc(sizeof(int));
-            *thread_id = ++thread_counter;
+        // Создаём новую партию каждые 2 секунды
+        if (time(NULL) - last_batch_time >= DELAY_BETWEEN_BATCHES) {
+            for (int i = 0; i < THREADS_PER_BATCH; i++) {
+                int* thread_id = malloc(sizeof(int));
+                *thread_id = ++thread_counter;
 
-            pthread_t tid;
-            if (pthread_create(&tid, NULL, thread_work, thread_id) != 0) {
-                perror("Ошибка создания потока");
-                free(thread_id);
+                pthread_t tid;
+                if (pthread_create(&tid, NULL, thread_work, thread_id) != 0) {
+                    perror("Ошибка создания потока");
+                    free(thread_id);
+                }
+                pthread_detach(tid);
             }
-            pthread_detach(tid);
+            last_batch_time = time(NULL);
         }
 
-        // Читаем из pipe и выводим
+        // Читаем из pipe и выводим сообщения мгновенно
         char buf[1024];
         ssize_t bytes_read = read(pipe_fd[0], buf, sizeof(buf));
         if (bytes_read > 0) {
             write(STDOUT_FILENO, buf, bytes_read);
         }
-
-        sleep(DELAY_BETWEEN_BATCHES);
     }
 
     return 0;
