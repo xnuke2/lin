@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define MAX_FILENAME_LEN 256
 #define BUFFER_SIZE 1024
@@ -13,8 +14,8 @@ int main() {
     struct stat file_stat;
     char filename[MAX_FILENAME_LEN];
     char buffer[BUFFER_SIZE];
-    FILE *file;
-    size_t bytes_read;
+    int fd;
+    ssize_t bytes_read;
 
     // 1. Просмотр содержимого текущего каталога
     printf("Содержимое текущего каталога:\n");
@@ -50,18 +51,23 @@ int main() {
         return 0;
     }
 
-    // 4. Вывод содержимого файла
-    file = fopen(filename, "r");
-    if (file == NULL) {
+    // 4. Открытие файла с помощью системного вызова
+    fd = open(filename, O_RDONLY);
+    if (fd == -1) {
         perror("Ошибка открытия файла");
         return 1;
     }
 
+    // 5. Чтение и вывод содержимого файла
     printf("\nСодержимое файла '%s':\n", filename);
-    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
-        fwrite(buffer, 1, bytes_read, stdout);
+    while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0) {
+        write(STDOUT_FILENO, buffer, bytes_read);
     }
 
-    fclose(file);
+    if (bytes_read == -1) {
+        perror("Ошибка чтения файла");
+    }
+
+    close(fd);
     return 0;
 }
