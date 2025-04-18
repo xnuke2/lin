@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LENGTH 1000
+
+void insert_word(char* text, const char* new_word, int position) {
+    char buffer[MAX_LENGTH];
+    int word_count = 0;
+    int i = 0, j = 0;
+    int in_word = 0;
+    
+    while (text[i] != '\0' && word_count < position) {
+        if (isspace(text[i])) {
+            if (in_word) {
+                word_count++;
+                in_word = 0;
+            }
+            buffer[j++] = text[i];
+        } else {
+            in_word = 1;
+            buffer[j++] = text[i];
+        }
+        i++;
+    }
+    
+    buffer[j] = '\0';
+    strcat(buffer, " ");
+    strcat(buffer, new_word);
+    
+    if (text[i] != '\0') {
+        strcat(buffer, " ");
+        strcat(buffer, &text[i]);
+    }
+    
+    strcpy(text, buffer);
+}
+
+int main() {
+    char input_text[MAX_LENGTH];
+    char new_word[100];
+    FILE *input_file, *output_file;
+    
+    // Ввод данных
+    printf("Введите текст: ");
+    fgets(input_text, MAX_LENGTH, stdin);
+    input_text[strcspn(input_text, "\n")] = '\0';
+    
+    printf("Введите слово для добавления: ");
+    scanf("%99s", new_word);
+    
+    // Запись в исходный файл
+    input_file = fopen("input.txt", "w");
+    if (input_file == NULL) {
+        perror("Ошибка открытия input.txt");
+        return 1;
+    }
+    fprintf(input_file, "%s", input_text);
+    fclose(input_file);
+    
+    // Чтение из файла
+    input_file = fopen("input.txt", "r");
+    if (input_file == NULL) {
+        perror("Ошибка открытия input.txt");
+        return 1;
+    }
+    fgets(input_text, MAX_LENGTH, input_file);
+    fclose(input_file);
+    
+    // Обработка текста
+    insert_word(input_text, new_word, 3);
+    
+    // Запись результата
+    output_file = fopen("output.txt", "w");
+    if (output_file == NULL) {
+        perror("Ошибка открытия output.txt");
+        return 1;
+    }
+    fprintf(output_file, "%s", input_text);
+    fclose(output_file);
+    
+    printf("Результат успешно записан в output.txt\n");
+    
+    return 0;
+}
