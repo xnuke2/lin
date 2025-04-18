@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-#include <unistd.h> // Для getpid()
+#include <unistd.h> 
 
 #define MSG_SIZE 128
 
@@ -17,16 +17,16 @@ int main() {
     key_t key;
     int msgid;
     struct message msg;
-    pid_t pid = getpid(); // Получаем PID текущего процесса
+    pid_t pid = getpid(); 
 
-    // Генерация ключа для очереди сообщений
+    
     key = ftok("msg_queue", 65);
     if (key == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
     }
 
-    // Создание очереди сообщений
+    
     msgid = msgget(key, 0666 | IPC_CREAT);
     if (msgid == -1) {
         perror("msgget");
@@ -35,7 +35,6 @@ int main() {
 
     printf("Server is waiting for messages...\n");
 
-    // Получение сообщения от клиента
     if (msgrcv(msgid, &msg, sizeof(msg.msg_text), 1, 0) == -1) {
         perror("msgrcv");
         exit(EXIT_FAILURE);
@@ -43,11 +42,11 @@ int main() {
 
     printf("Client says: %s\n", msg.msg_text);
 
-    // Создание имени файла с использованием PID
+    
     char filename[256];
-    snprintf(filename, sizeof(filename), "server_log_%d.txt", pid);
+    snprintf(filename, sizeof(filename), "server_log.%d", pid);
 
-    // Запись сообщения в файл
+    
     FILE *file = fopen(filename, "a");
     if (file == NULL) {
         perror("fopen");
@@ -58,7 +57,7 @@ int main() {
 
     printf("Message written to %s\n", filename);
 
-    // Отправка ответа клиенту
+    
     msg.msg_type = 2;
     strcpy(msg.msg_text, "Hello from server");
     if (msgsnd(msgid, &msg, sizeof(msg.msg_text), 0) == -1) {
@@ -68,7 +67,7 @@ int main() {
 
     printf("Response sent to client\n");
 
-    // Удаление очереди сообщений
+    
     if (msgctl(msgid, IPC_RMID, NULL) == -1) {
         perror("msgctl");
         exit(EXIT_FAILURE);

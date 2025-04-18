@@ -39,11 +39,11 @@ int main() {
     }
 
     printf("Сигналы SIGINT и SIGUSR1 заблокированы. PID процесса: %d\n", getpid());
-    printf("Отправьте сигналы через другую консоль: kill -SIGINT %d или kill -SIGUSR1 %d\n", getpid(), getpid());
-    printf("Попробуйте также kill -SIGKILL %d\n", getpid());
+    printf(" kill -SIGINT %d или kill -SIGUSR1 %d\n", getpid(), getpid());
+    printf(" kill -SIGKILL %d\n", getpid());
 
     // Бесконечный цикл для ожидания сигналов
-    while (1) {
+    while (true) {
         sleep(1);
     }
 

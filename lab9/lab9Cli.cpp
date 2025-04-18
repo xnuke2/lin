@@ -17,23 +17,23 @@ int main() {
     key_t key;
     int msgid;
     struct message msg;
-    pid_t pid = getpid(); // Получаем PID текущего процесса
+    pid_t pid = getpid(); 
 
-    // Генерация ключа для очереди сообщений
+    
     key = ftok("msg_queue", 65);
     if (key == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
     }
 
-    // Получение идентификатора очереди сообщений
+    
     msgid = msgget(key, 0666);
     if (msgid == -1) {
         perror("msgget");
         exit(EXIT_FAILURE);
     }
 
-    // Отправка сообщения серверу
+    
     msg.msg_type = 1;
     strcpy(msg.msg_text, "Hello from client");
     if (msgsnd(msgid, &msg, sizeof(msg.msg_text), 0) == -1) {
@@ -43,7 +43,7 @@ int main() {
 
     printf("Message sent to server\n");
 
-    // Получение ответа от сервера
+    
     if (msgrcv(msgid, &msg, sizeof(msg.msg_text), 2, 0) == -1) {
         perror("msgrcv");
         exit(EXIT_FAILURE);
@@ -51,11 +51,11 @@ int main() {
 
     printf("Server says: %s\n", msg.msg_text);
 
-    // Создание имени файла с использованием PID
+    
     char filename[256];
-    snprintf(filename, sizeof(filename), "client_log_%d.txt", pid);
+    snprintf(filename, sizeof(filename), "client_log.%d", pid);
 
-    // Запись сообщения в файл
+    
     FILE *file = fopen(filename, "a");
     if (file == NULL) {
         perror("fopen");

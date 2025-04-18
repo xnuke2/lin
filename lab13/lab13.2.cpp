@@ -3,7 +3,6 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #define MAX_FILENAME_LEN 256
 #define BUFFER_SIZE 1024
@@ -14,10 +13,9 @@ int main() {
     struct stat file_stat;
     char filename[MAX_FILENAME_LEN];
     char buffer[BUFFER_SIZE];
-    int fd;
-    ssize_t bytes_read;
+    FILE *file;
+    size_t bytes_read;
 
-    // 1. Просмотр содержимого текущего каталога
     printf("Содержимое текущего каталога:\n");
     dir = opendir(".");
     if (dir == NULL) {
@@ -30,17 +28,14 @@ int main() {
     }
     closedir(dir);
 
-    // 2. Ввод имени файла с клавиатуры
     printf("\nВведите имя файла: ");
     if (fgets(filename, MAX_FILENAME_LEN, stdin) == NULL) {
         perror("Ошибка чтения ввода");
         return 1;
     }
 
-    // Удаляем символ новой строки
     filename[strcspn(filename, "\n")] = '\0';
 
-    // 3. Проверка существования файла и его размера
     if (stat(filename, &file_stat) == -1) {
         perror("Ошибка получения информации о файле");
         return 1;
@@ -51,23 +46,17 @@ int main() {
         return 0;
     }
 
-    // 4. Открытие файла с помощью системного вызова
-    fd = open(filename, O_RDONLY);
-    if (fd == -1) {
+    file = fopen(filename, "r");
+    if (file == NULL) {
         perror("Ошибка открытия файла");
         return 1;
     }
 
-    // 5. Чтение и вывод содержимого файла
     printf("\nСодержимое файла '%s':\n", filename);
-    while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0) {
-        write(STDOUT_FILENO, buffer, bytes_read);
+    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+        fwrite(buffer, 1, bytes_read, stdout);
     }
 
-    if (bytes_read == -1) {
-        perror("Ошибка чтения файла");
-    }
-
-    close(fd);
+    fclose(file);
     return 0;
 }

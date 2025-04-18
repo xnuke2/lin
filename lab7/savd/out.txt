@@ -1,0 +1,104 @@
+    PID CMD                            PPID    PGID     SID
+   1216 /usr/lib/systemd/systemd --       1    1216    1216
+   1217 (sd-pam)                       1216    1216    1216
+   1244 /usr/bin/pipewire              1216    1244    1244
+   1245 /usr/bin/pipewire -c filter    1216    1245    1245
+   1248 /usr/bin/wireplumber           1216    1248    1248
+   1249 /usr/bin/pipewire-pulse        1216    1249    1249
+   1250 /usr/bin/gnome-keyring-daem    1216    1250    1250
+   1257 /usr/bin/dbus-daemon --sess    1216    1257    1257
+   1286 /usr/libexec/xdg-document-p    1216    1286    1286
+   1298 /usr/libexec/xdg-permission    1216    1298    1298
+   1372 /usr/libexec/gcr-ssh-agent     1216    1372    1372
+   1373 /usr/libexec/gnome-session-    1216    1373    1373
+   1388 /usr/libexec/gvfsd             1216    1388    1388
+   1395 /usr/libexec/gvfsd-fuse /ru    1216    1388    1388
+   1398 /usr/libexec/gnome-session-    1216    1398    1398
+   1440 /usr/libexec/at-spi-bus-lau    1398    1398    1398
+   1441 /usr/bin/gnome-shell           1216    1441    1441
+   1457 /usr/bin/dbus-daemon --conf    1440    1398    1398
+   1519 /usr/libexec/at-spi2-regist    1216    1398    1398
+   1554 /usr/libexec/gnome-shell-ca    1216    1257    1257
+   1568 /usr/libexec/evolution-sour    1216    1568    1568
+   1583 /usr/bin/gjs -m /usr/share/    1216    1257    1257
+   1604 /usr/bin/ibus-daemon --pane    1216    1604    1604
+   1605 /usr/libexec/gsd-a11y-setti    1216    1605    1605
+   1609 /usr/libexec/gsd-color         1216    1609    1609
+   1610 /usr/libexec/gsd-datetime      1216    1610    1610
+   1612 /usr/libexec/gsd-housekeepi    1216    1612    1612
+   1614 /usr/libexec/gsd-keyboard      1216    1614    1614
+   1619 /usr/libexec/gsd-media-keys    1216    1619    1619
+   1622 /usr/libexec/gsd-power         1216    1622    1622
+   1626 /usr/libexec/gsd-print-noti    1216    1626    1626
+   1627 /usr/libexec/gsd-rfkill        1216    1627    1627
+   1628 /usr/libexec/gsd-screensave    1216    1628    1628
+   1631 /usr/libexec/gsd-sharing       1216    1631    1631
+   1632 /usr/libexec/gsd-smartcard     1216    1632    1632
+   1633 /usr/libexec/gsd-sound         1216    1633    1633
+   1634 /usr/libexec/gsd-wacom         1216    1634    1634
+   1686 /usr/libexec/evolution-data    1398    1398    1398
+   1699 /usr/libexec/gvfs-udisks2-v    1216    1699    1699
+   1747 /usr/libexec/gsd-disk-utili    1398    1398    1398
+   1774 /usr/libexec/ibus-memconf      1604    1604    1604
+   1799 /usr/libexec/ibus-extension    1604    1604    1604
+   1807 /usr/libexec/ibus-portal       1216    1257    1257
+   1847 /usr/libexec/gvfs-afc-volum    1216    1847    1847
+   1862 /usr/libexec/gsd-printer       1216    1626    1626
+   1877 /usr/libexec/gvfs-gphoto2-v    1216    1877    1877
+   1896 /usr/libexec/goa-daemon        1216    1257    1257
+   1897 /usr/libexec/gvfs-mtp-volum    1216    1897    1897
+   1912 /usr/libexec/gvfs-goa-volum    1216    1912    1912
+   1925 /usr/libexec/goa-identity-s    1216    1257    1257
+   1942 /usr/libexec/evolution-cale    1216    1942    1942
+   1957 /usr/libexec/evolution-addr    1216    1957    1957
+   1973 /usr/libexec/ibus-engine-si    1604    1604    1604
+   1998 /usr/libexec/dconf-service     1216    1998    1998
+   2018 /usr/libexec/gvfsd-trash --    1388    1388    1388
+   2052 /usr/bin/gjs -m /usr/share/    1216    1257    1257
+   2083 /usr/libexec/tracker-miner-    1216    2083    2083
+   2108 /usr/libexec/xdg-desktop-po    1216    2108    2108
+   2113 /usr/libexec/xdg-desktop-po    1216    2113    2113
+   2114 gjs /usr/share/gnome-shell/    1441    1441    1441
+   2127 /usr/libexec/gvfsd-metadata    1216    2127    2127
+   2153 /usr/libexec/xdg-desktop-po    1216    2153    2153
+   2347 /snap/code/184/usr/share/co    1216    2347    2347
+   2351 /snap/code/184/usr/share/co    2347    2347    2347
+   2354 /snap/code/184/usr/share/co    2347    2347    2347
+   2413 /snap/code/184/usr/share/co    1216    2412    2412
+   2420 /usr/bin/Xwayland :0 -rootl    1441    1441    1441
+   2424 /usr/libexec/gsd-xsettings     1216    2424    2424
+   2446 /usr/libexec/ibus-x11          1216    2424    2424
+   2452 /usr/libexec/mutter-x11-fra    1441    1441    1441
+   2648 /snap/code/184/usr/share/co    2347    2347    2347
+   2772 /snap/code/184/usr/share/co    2354    2347    2347
+   2899 /snap/code/184/usr/share/co    2354    2347    2347
+   2908 /snap/code/184/usr/share/co    2354    2347    2347
+   2932 /snap/code/184/usr/share/co    2354    2347    2347
+   2971 /snap/code/184/usr/share/co    2347    2347    2347
+   3006 /usr/bin/update-notifier       1398    1398    1398
+   3020 /snap/code/184/usr/share/co    2347    2347    2347
+   3021 /snap/code/184/usr/share/co    2347    2347    2347
+   3026 /snap/code/184/usr/share/co    2347    2347    2347
+   3051 /snap/code/184/usr/share/co    2347    2347    2347
+   3055 /snap/code/184/usr/share/co    2347    2347    2347
+   3074 /snap/code/184/usr/share/co    2347    2347    2347
+   3125 /snap/code/184/usr/share/co    2347    2347    2347
+   3141 /snap/code/184/usr/share/co    2347    2347    2347
+   3167 /snap/code/184/usr/share/co    2347    2347    2347
+   3224 /snap/code/184/usr/share/co    2347    2347    2347
+   3298 /home/nik/.vscode/extension    3167    2347    2347
+   3366 /home/nik/.vscode/extension    1216    2347    2347
+   4262 /snap/snapd-desktop-integra    1216    4262    4262
+   4423 /snap/snapd-desktop-integra    4262    4262    4262
+   5715 /snap/code/184/usr/share/co    3020    2347    2347
+   7241 /usr/libexec/tracker-extrac    2083    2083    2083
+   7259 /home/nik/.vscode/extension    3167    2347    2347
+   7306 /home/nik/Документы/project    7295    7306    7306
+   7313 /bin/sh -c "/snap/code/184/    3224    2347    2347
+   7314 /bin/bash /snap/code/184/us    7313    2347    2347
+   7320 sleep 1                        7314    2347    2347
+   7322 /home/nik/Документы/project    7306    7306    7306
+   7323 sh -c -- ps -o pid,cmd,ppid    7306    7306    7306
+   7324 sh -c -- ps -o pid,cmd,ppid    7322    7306    7306
+   7325 ps -o pid,cmd,ppid,pgid,sid    7323    7306    7306
+   7326 ps -o pid,cmd,ppid,pgid,sid    7324    7306    7306

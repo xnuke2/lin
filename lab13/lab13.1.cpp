@@ -46,7 +46,6 @@ int main() {
     int input_fd, output_fd;
     ssize_t bytes_read;
     
-    // Ввод данных
     printf("Введите текст: ");
     fgets(input_text, MAX_LENGTH, stdin);
     input_text[strcspn(input_text, "\n")] = '\0';
@@ -54,7 +53,6 @@ int main() {
     printf("Введите слово для добавления: ");
     scanf("%99s", new_word);
     
-    // Запись в исходный файл (O_CREAT | O_WRONLY | O_TRUNC)
     input_fd = open("input.txt", O_CREAT | O_WRONLY | O_TRUNC, FILE_PERMISSIONS);
     if (input_fd == -1) {
         perror("Ошибка открытия input.txt");
@@ -63,7 +61,6 @@ int main() {
     write(input_fd, input_text, strlen(input_text));
     close(input_fd);
     
-    // Чтение из файла (O_RDONLY)
     input_fd = open("input.txt", O_RDONLY);
     if (input_fd == -1) {
         perror("Ошибка открытия input.txt");
@@ -78,10 +75,8 @@ int main() {
     input_text[bytes_read] = '\0';
     close(input_fd);
     
-    // Обработка текста
     insert_word(input_text, new_word, 3);
     
-    // Запись результата (O_CREAT | O_WRONLY | O_TRUNC)
     output_fd = open("output.txt", O_CREAT | O_WRONLY | O_TRUNC, FILE_PERMISSIONS);
     if (output_fd == -1) {
         perror("Ошибка открытия output.txt");

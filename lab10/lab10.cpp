@@ -20,30 +20,26 @@ void sem_op(int semid, int sem_num, int op) {
 }
 
 int main() {
-    key_t key = ftok("shmfile", 65); // Генерация ключа
-    int shmid = shmget(key, sizeof(int) * BUFFER_SIZE, 0666 | IPC_CREAT); // Разделяемая память
-    int *buffer = (int *)shmat(shmid, NULL, 0); // Присоединение разделяемой памяти
+    key_t key = ftok("shmfile", 65); 
+    int shmid = shmget(key, sizeof(int) * BUFFER_SIZE, 0666 | IPC_CREAT); 
+    int *buffer = (int *)shmat(shmid, NULL, 0); 
 
-    int semid = semget(key, 3, 0666 | IPC_CREAT); // Создание семафоров
-    semctl(semid, 0, SETVAL, BUFFER_SIZE); // Инициализация empty
-    semctl(semid, 1, SETVAL, 0); // Инициализация full
-    semctl(semid, 2, SETVAL, 1); // Инициализация mutex
+    int semid = semget(key, 3, 0666 | IPC_CREAT); 
+    semctl(semid, 0, SETVAL, BUFFER_SIZE); //empty
+    semctl(semid, 1, SETVAL, 0); // full
+    semctl(semid, 2, SETVAL, 1); // mutex
 
     if (fork() == 0) {
-        // Код для потребителя
         while (1) {
-            sleep(2); // Имитация работы
+            sleep(2); 
 
-            // Ожидание данных
             sem_op(semid, 1, -1); // full--
             sem_op(semid, 2, -1); // mutex--
 
-            // Чтение данных из буфера
             int item = buffer[0];
             printf("Потребитель: прочитал %d\n", item);
 
-            // Сдвиг буфера
-            for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+                for (int i = 0; i < BUFFER_SIZE - 1; i++) {
                 buffer[i] = buffer[i + 1];
             }
 
@@ -70,10 +66,10 @@ int main() {
         }
     }
 
-    // Отсоединение разделяемой памяти
+
     shmdt(buffer);
 
-    // Удаление разделяемой памяти и семафоров
+
     shmctl(shmid, IPC_RMID, NULL);
     semctl(semid, 0, IPC_RMID);
 
