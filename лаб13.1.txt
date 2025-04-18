@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #define MAX_LENGTH 1000
+#define FILE_PERMISSIONS 0644
 
 void insert_word(char* text, const char* new_word, int position) {
     char buffer[MAX_LENGTH];
@@ -37,9 +41,10 @@ void insert_word(char* text, const char* new_word, int position) {
 }
 
 int main() {
-    char input_text[MAX_LENGTH];
-    char new_word[100];
-    FILE *input_file, *output_file;
+    char input_text[MAX_LENGTH] = {0};
+    char new_word[100] = {0};
+    int input_fd, output_fd;
+    ssize_t bytes_read;
     
     // Ввод данных
     printf("Введите текст: ");
@@ -49,35 +54,41 @@ int main() {
     printf("Введите слово для добавления: ");
     scanf("%99s", new_word);
     
-    // Запись в исходный файл
-    input_file = fopen("input.txt", "w");
-    if (input_file == NULL) {
+    // Запись в исходный файл (O_CREAT | O_WRONLY | O_TRUNC)
+    input_fd = open("input.txt", O_CREAT | O_WRONLY | O_TRUNC, FILE_PERMISSIONS);
+    if (input_fd == -1) {
         perror("Ошибка открытия input.txt");
         return 1;
     }
-    fprintf(input_file, "%s", input_text);
-    fclose(input_file);
+    write(input_fd, input_text, strlen(input_text));
+    close(input_fd);
     
-    // Чтение из файла
-    input_file = fopen("input.txt", "r");
-    if (input_file == NULL) {
+    // Чтение из файла (O_RDONLY)
+    input_fd = open("input.txt", O_RDONLY);
+    if (input_fd == -1) {
         perror("Ошибка открытия input.txt");
         return 1;
     }
-    fgets(input_text, MAX_LENGTH, input_file);
-    fclose(input_file);
+    bytes_read = read(input_fd, input_text, MAX_LENGTH - 1);
+    if (bytes_read == -1) {
+        perror("Ошибка чтения");
+        close(input_fd);
+        return 1;
+    }
+    input_text[bytes_read] = '\0';
+    close(input_fd);
     
     // Обработка текста
     insert_word(input_text, new_word, 3);
     
-    // Запись результата
-    output_file = fopen("output.txt", "w");
-    if (output_file == NULL) {
+    // Запись результата (O_CREAT | O_WRONLY | O_TRUNC)
+    output_fd = open("output.txt", O_CREAT | O_WRONLY | O_TRUNC, FILE_PERMISSIONS);
+    if (output_fd == -1) {
         perror("Ошибка открытия output.txt");
         return 1;
     }
-    fprintf(output_file, "%s", input_text);
-    fclose(output_file);
+    write(output_fd, input_text, strlen(input_text));
+    close(output_fd);
     
     printf("Результат успешно записан в output.txt\n");
     
