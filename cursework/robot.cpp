@@ -11,10 +11,9 @@ const std::string Robot::FIFO_ROBOT = "/tmp/robot_fifo";
 const std::string Robot::FIFO_CONTROL = "/tmp/control_fifo";
 
 Robot::Robot() : position{ 0.0, 0.0 }, speed(1.0), battery(100), running(true) {
-    mkfifo(FIFO_ROBOT.c_str(), 0666);
-    mkfifo(FIFO_CONTROL.c_str(), 0666);
 
-    fd_robot = open(FIFO_ROBOT.c_str(), O_RDONLY | O_NONBLOCK);
+
+    fd_robot = open(FIFO_ROBOT.c_str(), O_RDONLY);
     fd_control = open(FIFO_CONTROL.c_str(), O_WRONLY);
 
     if (fd_robot == -1 || fd_control == -1) {
@@ -30,7 +29,7 @@ Robot::~Robot() {
 }
 
 void Robot::run() {
-    std::cout << "Ðîáîò èíèöèàëèçèðîâàí â ïîçèöèè ("
+    std::cout << "Ð Ð¾Ð±Ð¾Ñ‚ Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ð½ Ð² ("
         << position.x << ", " << position.y << ")\n";
 
     char buffer[256];
@@ -40,7 +39,7 @@ void Robot::run() {
             buffer[n] = '\0';
             processCommand(buffer);
         }
-        usleep(100000); // 100ms delay
+        
     }
 }
 
@@ -49,13 +48,10 @@ void Robot::processCommand(const std::string& cmd) {
     sscanf(cmd.c_str(), "%d %lf %lf %lf %ld",
         reinterpret_cast<int*>(&command.type),
         &command.x, &command.y, &command.speed, &command.timestamp);
-
-    switch (command.type) {
+        switch (command.type) {
     case CommandType::MOVE:
         moveTo(command.x, command.y);
-        break;
-    case CommandType::STATUS:
-        sendStatus();
+        
         break;
     case CommandType::CHANGE_SPEED:
         changeSpeed(command.speed);
@@ -63,30 +59,35 @@ void Robot::processCommand(const std::string& cmd) {
     case CommandType::EMERGENCY_STOP:
         emergencyStop();
         break;
+    case CommandType::STOP:
+        stop();
+        break;
     }
+    sendStatus();
 }
 
 void Robot::moveTo(double x, double y) {
     double distance = sqrt(pow(x - position.x, 2) + pow(y - position.y, 2));
-    double time = distance / speed;
+    double timetmp = distance / speed;
 
-    std::cout << "Äâèæåíèå ê (" << x << ", " << y << "), âðåìÿ: " << time << " ñåê\n";
-    sleep(static_cast<int>(time));
+    std::cout << "Ð”Ð²Ð¸Ð¶ÐµÐ½Ð¸Ðµ Ðº (" << x << ", " << y << "), Ð²Ñ€ÐµÐ¼Ñ: " << timetmp << " ÑÐµÐº\n";
+    sleep(static_cast<int>(timetmp));
 
     position = { x, y };
     lastUpdate = time(nullptr);
-    battery -= static_cast<int>(distance);
-    sendStatus();
-}
+    if(battery - static_cast<int>(distance)<0)
+        emergencyStop();
+    else battery - static_cast<int>(distance)<0;
+    }
 
 void Robot::changeSpeed(double newSpeed) {
     speed = newSpeed;
-    std::cout << "Ñêîðîñòü èçìåíåíà íà: " << speed << "\n";
-    sendStatus();
+    std::cout << "ÑÐºÐ¾Ñ€Ð¾ÑÑ‚ÑŒ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð° Ð½Ð° : " << speed << "\n";
+    
 }
 
 void Robot::emergencyStop() {
-    std::cout << "ÀÂÀÐÈÉÍÀß ÎÑÒÀÍÎÂÊÀ!\n";
+    std::cout << "ÐÐ²Ð°Ñ€Ð¸Ð¹Ð½Ð°Ñ Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ°!\n";
     running = false;
 }
 
@@ -98,5 +99,18 @@ void Robot::sendStatus() {
 }
 
 void Robot::stop() {
+    std::cout << "Ð¡Ð¸Ð³Ð½Ð°Ð» ÑÑ‚Ð¾Ð¿ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½.\n Ð’Ñ‹ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ...";
     running = false;
+}
+
+int main() {
+    try {
+        Robot robot;
+        robot.run();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "ÐžÑˆÐ¸Ð±ÐºÐ° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
 }

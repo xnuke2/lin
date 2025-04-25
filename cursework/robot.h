@@ -1,6 +1,4 @@
 // robot.h
-#ifndef ROBOT_H
-#define ROBOT_H
 
 #include <string>
 #include <ctime>
@@ -14,9 +12,9 @@ public:
 
     enum class CommandType {
         MOVE,
-        STATUS,
         EMERGENCY_STOP,
-        CHANGE_SPEED
+        CHANGE_SPEED,
+        STOP
     };
 
     struct Command {
@@ -51,4 +49,3 @@ private:
     static const std::string FIFO_CONTROL;
 };
 
-#endif // ROBOT_H

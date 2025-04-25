@@ -1,6 +1,5 @@
 // server.h
-#ifndef SERVER_H
-#define SERVER_H
+
 
 #include <string>
 #include <ctime>
@@ -21,4 +20,4 @@ private:
     static const std::string FIFO_CONTROL;
 };
 
-#endif // SERVER_H
+ // SERVER_H

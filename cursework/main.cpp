@@ -4,11 +4,11 @@
 
 int main() {
     try {
-        ControlServer server;
-        server.run("trajectory.txt");
+        ControlServer* server = new ControlServer();
+        server->run("trajectory.txt");
     }
     catch (const std::exception& e) {
-        std::cerr << "Îøèáêà: " << e.what() << std::endl;
+        std::cerr << "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: " << e.what() << std::endl;
         return 1;
     }
     return 0;
