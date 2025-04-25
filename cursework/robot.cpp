@@ -1,84 +1,102 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+// robot.cpp
+#include "robot.h"
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <string.h>
-#include <math.h>
-#include <signal.h>
-#define BUFFER_SIZE 256
-#define SPEED 1.0  
-#define FIFO_ROBOT "/tmp/robot_fifo"
-#define FIFO_CONTROL "/tmp/control_fifo"
+#include <iostream>
+#include <cmath>
+#include <cstring>
 
-typedef struct {
-    double x;
-    double y;
-} Point;
+const std::string Robot::FIFO_ROBOT = "/tmp/robot_fifo";
+const std::string Robot::FIFO_CONTROL = "/tmp/control_fifo";
 
+Robot::Robot() : position{ 0.0, 0.0 }, speed(1.0), battery(100), running(true) {
+    mkfifo(FIFO_ROBOT.c_str(), 0666);
+    mkfifo(FIFO_CONTROL.c_str(), 0666);
 
-
-
-const Point LOAD_POINT = { 0.0, 0.0 };
-
-
-double calculate_distance(Point a, Point b) {
-    return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
-}
-
-void robot_process() {
-    Point current = LOAD_POINT;
-    Point target;
-    char buffer[BUFFER_SIZE];
-
-    
-
-
-    int fd_robot = open(FIFO_ROBOT, O_RDONLY);
-    int fd_control = open(FIFO_CONTROL, O_WRONLY);
+    fd_robot = open(FIFO_ROBOT.c_str(), O_RDONLY | O_NONBLOCK);
+    fd_control = open(FIFO_CONTROL.c_str(), O_WRONLY);
 
     if (fd_robot == -1 || fd_control == -1) {
-        perror("error open FIFO");
-        exit(1);
+        throw std::runtime_error("Failed to open FIFO pipes");
     }
+}
 
-    printf("–†–æ–±–æ—Ç –Ω–∞—á–∞–ª –≤  (%.1f, %.1f)\n", current.x, current.y);
-    printf("–û–∂–∏–¥–∞–Ω–∏–µ –∫–æ–æ—Ä–¥–∏–Ω–∞—Ç...\n");
-
-    while (1) {
-        int n = read(fd_robot, buffer, BUFFER_SIZE);
-        if (n <= 0) break;
-
-        
-        if (strncmp(buffer, "STOP", 4) == 0) {
-            printf("–ü–æ–ª—É—á–µ–Ω–∞ –∫–æ–º–∞–Ω–¥–∞ –æ—Å—Ç–∞–Ω–æ–≤–∫–∏\n");
-            break;
-        }
-
-        sscanf(buffer, "%lf %lf", &target.x, &target.y);
-
-        double distance = calculate_distance(current, target);
-        double time = distance / SPEED;
-
-        printf("–î–≤–∏–≥–∞—è—Å –∫ —Ç–æ—á–∫–µ (%.1f, %.1f), –≤—Ä–µ–º—è –≤ –ø—É—Ç–∏: %.1f —Å–µ–∫\n",
-            target.x, target.y, time);
-
-        sleep((int)time);  
-        current = target;
-
-        
-        write(fd_control, "ARRIVED", 8);
-    }
-
+Robot::~Robot() {
     close(fd_robot);
     close(fd_control);
-    unlink(FIFO_ROBOT);
-    unlink(FIFO_CONTROL);
-    printf("–†–æ–±–æ—Ç –∑–∞–≤–µ—Ä—à–∏–ª —Ä–∞–±–æ—Ç—É\n");
+    unlink(FIFO_ROBOT.c_str());
+    unlink(FIFO_CONTROL.c_str());
 }
-int main() {
 
-    robot_process();
-    return 0;
+void Robot::run() {
+    std::cout << "–Ó·ÓÚ ËÌËˆË‡ÎËÁËÓ‚‡Ì ‚ ÔÓÁËˆËË ("
+        << position.x << ", " << position.y << ")\n";
+
+    char buffer[256];
+    while (running) {
+        ssize_t n = read(fd_robot, buffer, sizeof(buffer));
+        if (n > 0) {
+            buffer[n] = '\0';
+            processCommand(buffer);
+        }
+        usleep(100000); // 100ms delay
+    }
+}
+
+void Robot::processCommand(const std::string& cmd) {
+    Command command;
+    sscanf(cmd.c_str(), "%d %lf %lf %lf %ld",
+        reinterpret_cast<int*>(&command.type),
+        &command.x, &command.y, &command.speed, &command.timestamp);
+
+    switch (command.type) {
+    case CommandType::MOVE:
+        moveTo(command.x, command.y);
+        break;
+    case CommandType::STATUS:
+        sendStatus();
+        break;
+    case CommandType::CHANGE_SPEED:
+        changeSpeed(command.speed);
+        break;
+    case CommandType::EMERGENCY_STOP:
+        emergencyStop();
+        break;
+    }
+}
+
+void Robot::moveTo(double x, double y) {
+    double distance = sqrt(pow(x - position.x, 2) + pow(y - position.y, 2));
+    double time = distance / speed;
+
+    std::cout << "ƒ‚ËÊÂÌËÂ Í (" << x << ", " << y << "), ‚ÂÏˇ: " << time << " ÒÂÍ\n";
+    sleep(static_cast<int>(time));
+
+    position = { x, y };
+    lastUpdate = time(nullptr);
+    battery -= static_cast<int>(distance);
+    sendStatus();
+}
+
+void Robot::changeSpeed(double newSpeed) {
+    speed = newSpeed;
+    std::cout << "—ÍÓÓÒÚ¸ ËÁÏÂÌÂÌ‡ Ì‡: " << speed << "\n";
+    sendStatus();
+}
+
+void Robot::emergencyStop() {
+    std::cout << "¿¬¿–»…Õ¿ﬂ Œ—“¿ÕŒ¬ ¿!\n";
+    running = false;
+}
+
+void Robot::sendStatus() {
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "POS:%.1f,%.1f SPD:%.1f BAT:%d",
+        position.x, position.y, speed, battery);
+    write(fd_control, buffer, strlen(buffer) + 1);
+}
+
+void Robot::stop() {
+    running = false;
 }
