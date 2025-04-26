@@ -1,22 +1,67 @@
-#include "time_monitor.h"
-#include <iostream>
+#ifndef TIME_MONITOR_H
+#define TIME_MONITOR_H
 
-TimeMonitor::TimeMonitor() {}
+#include <string>
+#include <vector>
+#include <ctime>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-void TimeMonitor::startMonitoring() {
-    std::cout << "Time monitor started. Waiting for messages...\n";
+class Logger {
+private:
+    int fd;
+    std::string log_file;
 
-    while (true) {
-        MessageQueue::TimeMessage msg;
-        mq.receiveMessage(msg);
+public:
+    Logger(const std::string& filename = "time_control.log");
+    ~Logger();
 
-        if (msg.stage == -1) {
-            std::cout << "Received end signal. Exiting.\n";
-            break;
-        }
+    void writeToLog(int stage, double allowed_time, double actual_time);
+};
 
-        logger.writeToLog(msg.stage, msg.allowed_time, msg.actual_time);
-        std::cout << "Logged stage " << msg.stage << " ("
-            << msg.actual_time << "s > " << msg.allowed_time << "s)\n";
-    }
-}
+class MessageQueue {
+private:
+    int msgid;
+    static const int PROJECT_ID = 65;
+
+public:
+    struct TimeMessage {
+        long msg_type;
+        int stage;
+        double actual_time;
+        double allowed_time;
+    };
+
+    MessageQueue();
+    ~MessageQueue();
+
+    void sendMessage(const TimeMessage& msg);
+    void receiveMessage(TimeMessage& msg);
+};
+
+class TaskExecutor {
+private:
+    std::vector<double> allowed_times;
+    MessageQueue mq;
+
+    double getCurrentTime();
+    void simulateWork(double seconds);
+
+public:
+    TaskExecutor(const std::vector<double>& times);
+    void executeTask();
+};
+
+class TimeMonitor {
+private:
+    Logger logger;
+    MessageQueue mq;
+
+public:
+    TimeMonitor();
+    void startMonitoring();
+};
+
+#endif
